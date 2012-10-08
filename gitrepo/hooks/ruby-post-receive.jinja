@@ -1,0 +1,30 @@
+#!/bin/bash
+echo "-------------------------------------------------------"
+echo "* Received new rails configuration."
+echo "* Hostname: $(hostname)"
+echo "* Target: {{ target }}"
+echo "-------------------------------------------------------"
+
+tmpdir=$(mktemp -d)
+
+exec git archive HEAD | tar -x -C ${tmpdir}
+
+rsync -rvlyc --executability --delete ${tmpdir}/ {{ target }}/
+
+rm -fr ${tmpdir}
+
+if [[ -f {{ target }}/config/unicorn.rb ]]; then
+  echo "TODO: Reload unicorn: /etc/init.d/unicorn reload or add detection of Procfile"
+  echo "As I have a unicorn-state managing this I've omitted this part for simplicity"
+  echo "See my unicorn-salt-state if/when I release it, or ask me for it on twitter @olecr ;)"
+fi
+
+if [[ -f {{ target }}/.rvmrc ]]; then
+  echo "* Detected .rvmrc: Trusting it..."
+  test -f /etc/profile.d/rvm.sh && source /etc/profile.d/rvm.sh && rvm rvmrc trust {{ target }}
+fi
+
+if [[ -f {{ target }}/Gemfile ]]; then
+  echo "* Detected Gemfile: installing bundle..."
+  cd {{ target }} && bundle install --without development:test --path vendor/bundle --binstubs bin/
+exit 0
