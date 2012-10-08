@@ -27,4 +27,5 @@ fi
 if [[ -f {{ target }}/Gemfile ]]; then
   echo "* Detected Gemfile: installing bundle..."
   cd {{ target }} && bundle install --without development:test --path vendor/bundle --binstubs bin/
+fi
 exit 0
